@@ -13,14 +13,24 @@ def calculate_costs_custom(inputs, env):
 
     # Solo para Producción, añadir los valores fijos (ANUALES)
     if env == "Producción":
-        costs['GitLab'] = 73350
+        costs['GitLab'] = 750 * 12  # $9,000
         costs['CheckMarx'] = 26265.5
-        costs['Sonarqube'] = 32643.78  # Valor actualizado
+        costs['Sonarqube'] = 32643.78
 
-    # CodePipeline (mensual)
-    v1_pipelines = inputs['codepipeline_v1']
-    v2_minutes = inputs['codepipeline_v2']
-    costs['CodePipeline'] = max(v1_pipelines - 1, 0)*1.00 + max(v2_minutes - 100, 0)*0.002
+    # CodePipeline v2 (mensual y anual)
+    pipelines = inputs['codepipeline_pipelines']
+    executions_per_day = inputs['codepipeline_executions_per_day']
+    minutes_per_execution = inputs['codepipeline_minutes_per_execution']
+    transitions_per_execution = inputs['codepipeline_transitions_per_execution']
+
+    total_executions = pipelines * executions_per_day * 30
+    total_transitions = total_executions * transitions_per_execution
+    total_minutes = total_executions * minutes_per_execution
+
+    cost_transitions = total_transitions * 0.002
+    cost_minutes = max(total_minutes - 100, 0) * 0.002  # 100 mins gratis
+    codepipeline_v2_monthly = cost_transitions + cost_minutes
+    costs['CodePipeline'] = codepipeline_v2_monthly
 
     # CodeBuild (mensual)
     builds = inputs['codebuild_builds']
@@ -28,18 +38,19 @@ def calculate_costs_custom(inputs, env):
     duration_sec = duration * 60
     costs['CodeBuild'] = builds * duration_sec * 0.00002
 
-    # CodeArtifact (mensual)
-    storage = inputs['codeartifact_storage']
-    requests = inputs['codeartifact_requests']
-    intra = inputs['codeartifact_intra']
-    outbound = inputs['codeartifact_outbound']
+    # CodeArtifact (anual, fijo)
+    # storage = inputs['codeartifact_storage']
+    # requests = inputs['codeartifact_requests']
+    # intra = inputs['codeartifact_intra']
+    # outbound = inputs['codeartifact_outbound']
 
-    storage_cost = max(storage - 2, 0) * 0.05
-    requests_cost = max(requests - 100000, 0) * 0.000005
-    intra_cost = intra * 0.02
-    outbound_cost = outbound * 0.09
+    # storage_cost = max(storage - 2, 0) * 0.05
+    # requests_cost = max(requests - 100000, 0) * 0.000005
+    # intra_cost = intra * 0.02
+    # outbound_cost = outbound * 0.09
 
-    costs['CodeArtifact'] = storage_cost + requests_cost + intra_cost + outbound_cost + 0.60
+    # costs['CodeArtifact'] = storage_cost + requests_cost + intra_cost + outbound_cost + 0.60
+    costs['CodeArtifact'] = 750 * 12  # $9,000 anual fijo
 
     return costs
 
@@ -74,32 +85,40 @@ col_btn, col_spacer = st.columns([2, 8])
 with col_btn:
     if st.button("✨ Cargar ejemplo rápido"):
         st.session_state.update({
-            "Producción_codepipeline_v1": 5,
-            "Producción_codepipeline_v2": 25000,
+            "Producción_codepipeline_pipelines": 300,
+            "Producción_codepipeline_executions_per_day": 10,
+            "Producción_codepipeline_minutes_per_execution": 5,
+            "Producción_codepipeline_transitions_per_execution": 2,
             "Producción_codebuild_builds": 25000,
             "Producción_codebuild_duration": 5,
             "Producción_codeartifact_storage": 100,
             "Producción_codeartifact_requests": 25000,
             "Producción_codeartifact_intra": 0.0,
             "Producción_codeartifact_outbound": 100.0,
-            "Desarrollo (DEV)_codepipeline_v1": 2,
-            "Desarrollo (DEV)_codepipeline_v2": 100000,
+            "Desarrollo (DEV)_codepipeline_pipelines": 300,
+            "Desarrollo (DEV)_codepipeline_executions_per_day": 10,
+            "Desarrollo (DEV)_codepipeline_minutes_per_execution": 5,
+            "Desarrollo (DEV)_codepipeline_transitions_per_execution": 2,
             "Desarrollo (DEV)_codebuild_builds": 100000,
             "Desarrollo (DEV)_codebuild_duration": 5,
             "Desarrollo (DEV)_codeartifact_storage": 100,
             "Desarrollo (DEV)_codeartifact_requests": 100000,
             "Desarrollo (DEV)_codeartifact_intra": 0.0,
             "Desarrollo (DEV)_codeartifact_outbound": 100.0,
-            "Pruebas (UAT)_codepipeline_v1": 1,
-            "Pruebas (UAT)_codepipeline_v2": 25000,
+            "Pruebas (UAT)_codepipeline_pipelines": 300,
+            "Pruebas (UAT)_codepipeline_executions_per_day": 10,
+            "Pruebas (UAT)_codepipeline_minutes_per_execution": 5,
+            "Pruebas (UAT)_codepipeline_transitions_per_execution": 2,
             "Pruebas (UAT)_codebuild_builds": 25000,
             "Pruebas (UAT)_codebuild_duration": 5,
             "Pruebas (UAT)_codeartifact_storage": 100,
             "Pruebas (UAT)_codeartifact_requests": 25000,
             "Pruebas (UAT)_codeartifact_intra": 0.0,
             "Pruebas (UAT)_codeartifact_outbound": 100.0,
-            "QA_codepipeline_v1": 1,
-            "QA_codepipeline_v2": 50000,
+            "QA_codepipeline_pipelines": 300,
+            "QA_codepipeline_executions_per_day": 10,
+            "QA_codepipeline_minutes_per_execution": 5,
+            "QA_codepipeline_transitions_per_execution": 2,
             "QA_codebuild_builds": 50000,
             "QA_codebuild_duration": 5,
             "QA_codeartifact_storage": 100,
@@ -127,19 +146,25 @@ with st.sidebar:
     for env in environments:
         with st.expander(f"Configuración {env}"):
             st.markdown("Ajusta los parámetros de cada servicio para este entorno.")
-            tab1, tab2, tab3 = st.tabs(["CodePipeline", "CodeBuild", "CodeArtifact"])
+            tab1, tab2, tab3 = st.tabs(["CodePipeline v2", "CodeBuild", "CodeArtifact"])
             with tab1:
-                st.subheader("CodePipeline")
-                codepipeline_v1 = st.number_input(
-                    f"{env} - V1 - Pipelines activos", 0, 50000, 0,
-                    help="Cantidad de pipelines activos en CodePipeline versión 1. El primero es gratuito.",
-                    key=f"{env}_codepipeline_v1")
-                codepipeline_v2 = st.number_input(
-                    f"{env} - V2 - Minutos ejecución", 0, 100000,
-                    25000 if env == "Producción" else (
-                    100000 if env == "Desarrollo (DEV)" else (
-                    25000 if env == "Pruebas (UAT)" else 50000)),
-                    help="Primeros 100 minutos gratuitos", key=f"{env}_codepipeline_v2")
+                st.subheader("CodePipeline v2")
+                pipelines = st.number_input(
+                    f"{env} - Pipelines activos", 1, 1000, 300,
+                    help="Cantidad de pipelines activos en CodePipeline v2.",
+                    key=f"{env}_codepipeline_pipelines")
+                executions_per_day = st.number_input(
+                    f"{env} - Ejecuciones por día (por pipeline)", 1, 1000, 10,
+                    help="Ejecuciones diarias por pipeline.",
+                    key=f"{env}_codepipeline_executions_per_day")
+                minutes_per_execution = st.number_input(
+                    f"{env} - Minutos por ejecución", 1, 60, 5,
+                    help="Duración promedio de cada ejecución.",
+                    key=f"{env}_codepipeline_minutes_per_execution")
+                transitions_per_execution = st.number_input(
+                    f"{env} - Transiciones por ejecución", 1, 10, 2,
+                    help="Transiciones por ejecución (Source → Deploy).",
+                    key=f"{env}_codepipeline_transitions_per_execution")
             with tab2:
                 st.subheader("CodeBuild")
                 codebuild_builds = st.number_input(
@@ -169,8 +194,10 @@ with st.sidebar:
                     f"{env} - Transferencia Saliente (GB)", 0.0, 10000.0, 100.0,
                     help="0.09 USD/GB a Internet", key=f"{env}_codeartifact_outbound")
             environment_inputs[env] = {
-                'codepipeline_v1': codepipeline_v1,
-                'codepipeline_v2': codepipeline_v2,
+                'codepipeline_pipelines': pipelines,
+                'codepipeline_executions_per_day': executions_per_day,
+                'codepipeline_minutes_per_execution': minutes_per_execution,
+                'codepipeline_transitions_per_execution': transitions_per_execution,
                 'codebuild_builds': codebuild_builds,
                 'codebuild_duration': codebuild_duration,
                 'codeartifact_storage': codeartifact_storage,
@@ -278,7 +305,8 @@ else:
 with st.expander("🧮 Detalles de Cálculo"):
     st.markdown("""
     **GitLab:**  
-    Valor fijo anual para Producción: 73350
+    Costo mensual: $750 USD  
+    Costo anual: $750 × 12 = **$9,000 USD**
 
     **CheckMarx:**  
     Valor fijo anual para Producción: 26265.5
@@ -286,17 +314,22 @@ with st.expander("🧮 Detalles de Cálculo"):
     **Sonarqube:**  
     Valor fijo anual para Producción: 32643.78
 
-    **CodePipeline:**  
-    V1 Costo = max(Pipelines - 1, 0) × 1.00 USD  
-    V2 Costo = max(Minutos - 100, 0) × 0.002 USD
+    **CodePipeline v2:**  
+    - **Ejecuciones por mes:** Pipelines × Ejecuciones/día × 30  
+    - **Transiciones por mes:** Ejecuciones × Transiciones/ejecución  
+    - **Minutos por mes:** Ejecuciones × Minutos/ejecución  
+    - **Costo transiciones:** Transiciones × $0.002 USD  
+    - **Costo minutos:** max(Minutos - 100, 0) × $0.002 USD  
+    - **Total mensual:** Costo transiciones + Costo minutos  
+    - **Total anual:** Total mensual × 12
 
     **CodeBuild:**  
     Costo = Builds × Duración × 0.00002 USD
 
     **CodeArtifact:**  
-    Almacenamiento = max(GB - 2, 0) × 0.05 USD  
-    Solicitudes = max(Requests - 100,000, 0) × 0.000005 USD  
-    Transferencia = (Intra × 0.02 USD) + (Outbound × 0.09 USD)
+    Costo mensual: $750 USD  
+    Costo anual: $750 × 12 = **$9,000 USD**  
+    _(Nota: Para efectos de este cálculo, CodeArtifact se considera un costo fijo anual de $9,000 USD)_
     """)
 
 # --- PIE DE PÁGINA PROFESIONAL ---
