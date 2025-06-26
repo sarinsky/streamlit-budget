@@ -58,7 +58,7 @@ Esta herramienta te permite comparar los costos estimados de diferentes entornos
 """, unsafe_allow_html=True)
 
 # --- GUÍA RÁPIDA EN EXPANDER ---
-with st.expander("🛈 Guía rápida de uso ..."):
+with st.expander("🛈 Guía rápida de uso"):
     st.markdown("""
     1. **Selecciona los entornos** que deseas comparar (Producción, Desarrollo, Pruebas, QA).
     2. **Ajusta los parámetros** de cada entorno en la barra lateral (puedes dejar los valores por defecto o personalizarlos).
@@ -208,23 +208,42 @@ if selected_environments:
     total_sum_annual = 0.0
     for env in selected_environments:
         if env in environment_costs:
-            annual_services = ['GitLab', 'CheckMarx', 'Sonarqube']
+            annual_services = ['GitLab', 'CheckMarx', 'Sonarqube', 'CodeArtifact']
             annual_cost = sum(environment_costs[env][s] for s in annual_services if s in environment_costs[env])
             monthly_cost = sum(v for k, v in environment_costs[env].items() if k not in annual_services)
-            total_cost_month = monthly_cost
             total_cost_annual = annual_cost + (monthly_cost * 12)
-            metrics_data[env] = {
-                "Costo Total Mensual": f"${total_cost_month:,.2f} USD",
-                "Costo Total Anual":  f"${total_cost_annual:,.2f} USD"
-            }
-            total_sum_annual += total_cost_annual
+            # Solo Producción: mostrar solo el anual y el valor fijo solicitado
+            if env == "Producción":
+                metrics_data[env] = {
+                    "Costo Total Anual":  "$160,976.88 USD"
+                }
+                total_sum_annual += 160976.88
+            else:
+                metrics_data[env] = {
+                    "Costo Total Mensual": f"${monthly_cost:,.2f} USD",
+                    "Costo Total Anual":  f"${total_cost_annual:,.2f} USD"
+                }
+                total_sum_annual += total_cost_annual
 
-    metrics_df = pd.DataFrame(metrics_data).T
-    metrics_df.loc["TOTAL"] = [
-        "",  # No aplica mensual para el total
-        f"${total_sum_annual:,.2f} USD"
-    ]
-    st.dataframe(metrics_df.style.highlight_max(axis=0, color='#FFD700'), height=200)
+    # Ajustar columnas según si Producción está seleccionada
+    if "Producción" in metrics_data:
+        metrics_df = pd.DataFrame(metrics_data).T
+        # Si Producción es la única seleccionada, solo muestra el anual
+        if len(metrics_df.columns) == 1:
+            metrics_df = metrics_df[["Costo Total Anual"]]
+    else:
+        metrics_df = pd.DataFrame(metrics_data).T
+
+    # Ajustar la fila TOTAL para que coincida con el número de columnas
+    total_row = []
+    for col in metrics_df.columns:
+        if col == "Costo Total Anual":
+            total_row.append(f"${total_sum_annual:,.2f} USD")
+        else:
+            total_row.append("")
+
+    metrics_df.loc["TOTAL"] = total_row
+    st.dataframe(metrics_df, height=200)
     st.markdown("---")
 
     # --- DESGLOSE DETALLADO ---
@@ -320,8 +339,8 @@ with st.expander("🧮 Detalles de Cálculo"):
 
     **CodeArtifact:**  
     Costo mensual: $750 USD  
-    Costo anual: $750 × 12 = **$9,000 USD**  
-    _(Nota: Para efectos de este cálculo, CodeArtifact se considera un costo fijo anual de $9,000 USD)_
+    Costo anual: $950 × 12 = **$11,400 USD**  
+    _(Nota: Para efectos de este cálculo, CodeArtifact se considera un costo fijo anual de $11,400 USD)_
     """)
 
 # --- PIE DE PÁGINA PROFESIONAL ---
