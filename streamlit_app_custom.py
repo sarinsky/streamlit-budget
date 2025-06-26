@@ -243,7 +243,8 @@ if selected_environments:
             total_row.append("")
 
     metrics_df.loc["TOTAL"] = total_row
-    st.dataframe(metrics_df, height=200)
+
+    st.dataframe(metrics_df, height=220)
     st.markdown("---")
 
     # --- DESGLOSE DETALLADO ---
@@ -266,10 +267,19 @@ if selected_environments:
         annual_services = ['GitLab', 'CheckMarx', 'Sonarqube', 'CodeArtifact']
         annual_cost = sum(environment_costs[env][s] for s in annual_services if s in environment_costs[env])
         monthly_cost = sum(v for k, v in environment_costs[env].items() if k not in annual_services)
-        totals[env] = annual_cost + (monthly_cost * 12)
+        # Producción: mostrar el total anual, los demás ambientes mostrar solo la suma mensual
+        if env == "Producción":
+            totals[env] = annual_cost + (monthly_cost * 12)
+        else:
+            totals[env] = annual_cost + monthly_cost
     detailed_data['Total'] = {env: f"${totals[env]:,.2f}" for env in selected_environments}
-    detailed_data['Total']["TOTAL"] = f"${sum(totals.values()):,.2f}"
     detailed_df = pd.DataFrame(detailed_data).T
+
+    # Agregar fila de sumatoria de ambientes debajo del total
+    sum_row = {env: "" for env in selected_environments}
+    sum_row["TOTAL"] = f"Sumatoria Ambientes: ${sum(totals.values()):,.2f} USD"
+    detailed_df.loc[""] = sum_row
+
     st.dataframe(detailed_df, height=350)
     st.markdown("---")
 
@@ -348,7 +358,7 @@ st.markdown("---")
 st.markdown("""
 <div style='text-align:center; color:gray; font-size:14px;'>
 Desarrollado por tu equipo | Última actualización: Junio 2025<br>
-Contacto: <a href='mailto:budapest5896@gmail.com'>soporte@tuempresa.com</a><br>
+Contacto: <a href='mailto:soporte@tuempresa.com'>soporte@tuempresa.com</a><br>
 _* Los precios están basados en la región US East (N. Virginia)_
 </div>
 """, unsafe_allow_html=True)
