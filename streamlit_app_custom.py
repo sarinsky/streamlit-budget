@@ -13,11 +13,12 @@ def calculate_costs_custom(inputs, env):
 
     # Solo para Producción, añadir los valores fijos (ANUALES)
     if env == "Producción":
-        costs['GitLab'] = 750 * 12  # $9,000
+        costs['GitLab'] = 73750  # $9,000
         costs['CheckMarx'] = 26265.5
         costs['Sonarqube'] = 32643.78
+        costs['CodeArtifact'] = 950 * 12  # $9,000 anual fijo SOLO en Producción
 
-    # CodePipeline v2 (mensual y anual)
+    # CodePipeline v2 (mensual)
     pipelines = inputs['codepipeline_pipelines']
     executions_per_day = inputs['codepipeline_executions_per_day']
     minutes_per_execution = inputs['codepipeline_minutes_per_execution']
@@ -36,21 +37,8 @@ def calculate_costs_custom(inputs, env):
     builds = inputs['codebuild_builds']
     duration = inputs['codebuild_duration']
     duration_sec = duration * 60
-    costs['CodeBuild'] = builds * duration_sec * 0.00002
-
-    # CodeArtifact (anual, fijo)
-    # storage = inputs['codeartifact_storage']
-    # requests = inputs['codeartifact_requests']
-    # intra = inputs['codeartifact_intra']
-    # outbound = inputs['codeartifact_outbound']
-
-    # storage_cost = max(storage - 2, 0) * 0.05
-    # requests_cost = max(requests - 100000, 0) * 0.000005
-    # intra_cost = intra * 0.02
-    # outbound_cost = outbound * 0.09
-
-    # costs['CodeArtifact'] = storage_cost + requests_cost + intra_cost + outbound_cost + 0.60
-    costs['CodeArtifact'] = 750 * 12  # $9,000 anual fijo
+    codebuild_monthly = builds * duration_sec * 0.00002
+    costs['CodeBuild'] = codebuild_monthly
 
     return costs
 
@@ -249,10 +237,14 @@ if selected_environments:
     for service in sorted(all_services):
         detailed_data[service] = {}
         for env in selected_environments:
-            cost = environment_costs[env].get(service, None)
-            detailed_data[service][env] = f"${cost:,.2f}" if cost is not None else "-"
+            # Mostrar CodeArtifact solo en Producción
+            if service == "CodeArtifact" and env != "Producción":
+                detailed_data[service][env] = "-"
+            else:
+                cost = environment_costs[env].get(service, None)
+                detailed_data[service][env] = f"${cost:,.2f}" if cost is not None else "-"
     for env in selected_environments:
-        annual_services = ['GitLab', 'CheckMarx', 'Sonarqube']
+        annual_services = ['GitLab', 'CheckMarx', 'Sonarqube', 'CodeArtifact']
         annual_cost = sum(environment_costs[env][s] for s in annual_services if s in environment_costs[env])
         monthly_cost = sum(v for k, v in environment_costs[env].items() if k not in annual_services)
         totals[env] = annual_cost + (monthly_cost * 12)
@@ -305,8 +297,8 @@ else:
 with st.expander("🧮 Detalles de Cálculo"):
     st.markdown("""
     **GitLab:**  
-    Costo mensual: $750 USD  
-    Costo anual: $750 × 12 = **$9,000 USD**
+    
+    Costo anual fijo:  = **$73,750 USD**
 
     **CheckMarx:**  
     Valor fijo anual para Producción: 26265.5
