@@ -249,6 +249,7 @@ if selected_environments:
 
     # --- DESGLOSE DETALLADO ---
     st.subheader("Desglose Detallado Comparativo")
+    st.caption("⚠️ Solo el valor de producción se calcula anualmente; los demás indicadores son mensuales.")
     detailed_data = {}
     totals = {env: 0.0 for env in selected_environments}
     all_services = set()
