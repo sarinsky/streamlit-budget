@@ -58,7 +58,7 @@ Esta herramienta te permite comparar los costos estimados de diferentes entornos
 """, unsafe_allow_html=True)
 
 # --- GUÍA RÁPIDA EN EXPANDER ---
-with st.expander("🛈 Guía rápida de uso"):
+with st.expander("🛈 Guía rápida de uso..."):
     st.markdown("""
     1. **Selecciona los entornos** que deseas comparar (Producción, Desarrollo, Pruebas, QA).
     2. **Ajusta los parámetros** de cada entorno en la barra lateral (puedes dejar los valores por defecto o personalizarlos).
@@ -348,7 +348,7 @@ st.markdown("---")
 st.markdown("""
 <div style='text-align:center; color:gray; font-size:14px;'>
 Desarrollado por tu equipo | Última actualización: Junio 2025<br>
-Contacto: <a href='mailto:soporte@tuempresa.com'>soporte@tuempresa.com</a><br>
+Contacto: <a href='mailto:budapest5896@gmail.com'>soporte@tuempresa.com</a><br>
 _* Los precios están basados en la región US East (N. Virginia)_
 </div>
 """, unsafe_allow_html=True)
