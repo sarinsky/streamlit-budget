@@ -58,7 +58,7 @@ Esta herramienta te permite comparar los costos estimados de diferentes entornos
 """, unsafe_allow_html=True)
 
 # --- GUÍA RÁPIDA EN EXPANDER ---
-with st.expander("🛈 Guía rápida de uso"):
+with st.expander("🛈 Guía rápida de uso ..."):
     st.markdown("""
     1. **Selecciona los entornos** que deseas comparar (Producción, Desarrollo, Pruebas, QA).
     2. **Ajusta los parámetros** de cada entorno en la barra lateral (puedes dejar los valores por defecto o personalizarlos).
